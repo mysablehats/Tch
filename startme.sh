@@ -7,6 +7,10 @@ DOCKERMACHINEIP=172.28.5.30
 DOCKERMACHINENAME=tch
 MACHINEHOSTNAME=torch_machine
 CATKINWSPATH=/root/catkin_ws
+#DOCKERFILE=docker/pytorch/ ## standard should be .
+#BUILDINDIR=$PWD/pytorch ##standard should be $PWD
+DOCKERFILE=.
+BUILDINDIR=$PWD
 #export NV_GPU=1
 if [ -z "$PASSWD" ]
 then
@@ -16,8 +20,11 @@ else
   while true; do
     {
     #echo "doing nothing"
-    nvidia-docker build -t $DOCKERMACHINENAME .
+    OLDDIR=$PWD
+    cd $BUILDINDIR
+    nvidia-docker build -t $DOCKERMACHINENAME $DOCKERFILE
     #nvidia-docker build --no-cache -t $DOCKERMACHINENAME .
+    cd $OLDDIR
     } ||
     {
     echo "something went wrong..." &&
