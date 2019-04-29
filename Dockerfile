@@ -59,8 +59,8 @@ RUN mkdir /var/run/sshd \
     && sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
     && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
-ENV NOTVISIBLE "in users profile" \
-    && echo "export VISIBLE=now" >> /etc/profile
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
 
 EXPOSE 22
 
@@ -77,9 +77,11 @@ ADD scripts/ros.sh /root/
 RUN /root/ros.sh \
     && echo "source /root/ros_catkin_ws/install_isolated/setup.bash" >> /etc/bash.bashrc
 
+ENV ROS_MASTER_URI=http://SATELLITE-S50-B:11311
+
 #add my snazzy banner
 ADD banner.txt /root/
 
 ADD scripts/entrypoint.sh /root/
-#ENTRYPOINT ["/root/entrypoint.sh"]
+ENTRYPOINT ["/root/entrypoint.sh"]
 ###needs the catkin stuff as well.
