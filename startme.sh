@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 PASSWD=$1
-MYUSERNAME=frederico
-DOCKERHOSTNAME=poop
+MYUSERNAME=fred
+DOCKERHOSTNAME=B
 THISVOLUMENAME=sshvolume-torch
 DOCKERMACHINEIP=172.28.5.30
 DOCKERMACHINENAME=tch
@@ -39,8 +39,8 @@ else
     docker network create \
       --driver=bridge \
       --subnet=172.28.0.0/16 \
-      --ip-range=172.28.5.0/24 \
-      --gateway=172.28.5.254 \
+      --ip-range=172.28.6.0/24 \
+      --gateway=172.28.6.254 \
       br0
   else
     echo "found br0 docker network."

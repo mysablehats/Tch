@@ -35,4 +35,51 @@ WORKDIR /workspace
 RUN chmod -R a+w /workspace
 
 
-############# needs sshd and ros with python3 running (copy what I did for fr machine) 
+############# needs sshd and ros with python3 running (copy what I did for fr machine)
+
+##merge later when it works!
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get -y update
+RUN apt-get install -y --fix-missing \
+  python3-pip \
+  python-pip \
+  openssh-server\
+  libssl-dev \
+  #python-sh is needed for the fix.py. once that is solved, remove it.
+  python-sh \
+  tar\
+  libboost-all-dev \
+  && apt-get clean && rm -rf /tmp/* /var/tmp/*
+
+# to get ssh working for the ros machine to be functional: (adapted from docker docs running_ssh_service)
+RUN mkdir /var/run/sshd \
+    && echo 'root:ros_ros' | chpasswd \
+    && sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+    && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+ENV NOTVISIBLE "in users profile" \
+    && echo "export VISIBLE=now" >> /etc/profile
+
+EXPOSE 22
+
+#### ROS stuff
+
+ADD requirements_ros.txt /root/
+RUN pip3 install --trusted-host pypi.python.org -r /root/requirements_ros.txt && \
+    pip2 install --trusted-host pypi.python.org -r /root/requirements_ros.txt && \
+    python -m pip install --trusted-host pypi.python.org -r /root/requirements_ros.txt
+
+ADD scripts/ros.sh /root/
+### microsoft broke github, so I need this to run wstool. probably need to remove this when it gets fixed!
+#ADD scripts/fix.py /root/
+RUN /root/ros.sh \
+    && echo "source /root/ros_catkin_ws/install_isolated/setup.bash" >> /etc/bash.bashrc
+
+#add my snazzy banner
+ADD banner.txt /root/
+
+ADD scripts/entrypoint.sh /root/
+#ENTRYPOINT ["/root/entrypoint.sh"]
+###needs the catkin stuff as well.

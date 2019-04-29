@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #copy pasted example from https://github.com/jcjohnson/pytorch-examples/blob/master/nn/two_layer_net_nn.py
 import torch
