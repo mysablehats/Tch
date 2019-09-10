@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 PASSWD=$1
-MYUSERNAME=fred
-DOCKERHOSTNAME=B
+MYUSERNAME=frederico
+DOCKERHOSTNAME=poop
 THISVOLUMENAME=sshvolume-torch
 DOCKERMACHINEIP=172.28.5.30
 DOCKERMACHINENAME=tch
-MACHINEHOSTNAME=torch_machine
+MACHINEHOSTNAME=torch_machine2
 CATKINWSPATH=/root/catkin_ws
 #DOCKERFILE=docker/pytorch/ ## standard should be .
 #BUILDINDIR=$PWD/pytorch ##standard should be $PWD
@@ -39,8 +39,8 @@ else
     docker network create \
       --driver=bridge \
       --subnet=172.28.0.0/16 \
-      --ip-range=172.28.6.0/24 \
-      --gateway=172.28.6.254 \
+      --ip-range=172.28.5.0/24 \
+      --gateway=172.28.5.254 \
       br0
   else
     echo "found br0 docker network."
