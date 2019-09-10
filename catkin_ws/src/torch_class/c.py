@@ -26,6 +26,7 @@ loss_fn = None
 H = 5000
 learning_rate = 0.005
 num_epochs = 10
+modeltype = '1-hidden'
 
 def memstuff():
     for obj in gc.get_objects():
@@ -45,19 +46,25 @@ def loadmodel(namename):
     f.close()
 
 def genmodel(bobo,device):
-    global model, H
+    global model, H, modeltype
     # Use the nn package to define our model as a sequence of layers. nn.Sequential
     # is a Module which contains other Modules, and applies them in sequence to
     # produce its output. Each Linear Module computes output from input using a
     # linear function, and holds internal Tensors for its weight and bias.
     # After constructing the model we use the .to() method to move it to the
     # desired device.
-    print('using %d hidden units'%(H))
-    model = torch.nn.Sequential(
-              torch.nn.Linear(bobo.D_in, H),
-              torch.nn.ReLU(),
-              torch.nn.Linear(H, bobo.D_out),
-            ).to(device)
+    if modeltype == '1-hidden':
+        print('using %d hidden units'%(H))
+        model = torch.nn.Sequential(
+                  torch.nn.Linear(bobo.D_in, H),
+                  torch.nn.ReLU(),
+                  torch.nn.Linear(H, bobo.D_out),
+                ).to(device)
+    elif modeltype == '0-hidden':
+        print('using simply fully connected output layer')
+        model = torch.nn.Sequential(
+                  torch.nn.Linear(bobo.D_in, bobo.D_out),
+                ).to(device) # do i need the Sequential?
 
 def genloss():
     global loss_fn
@@ -130,3 +137,8 @@ def evaluate(model, bobo):
       acc_ = (real == pred)
       myacc = torch.sum(acc_).item()/bobo.batchsize
       print('accuracy:%f'%(myacc ))
+      for i, aclass in enumerate(bobo.classes):
+            thisset = (real == i)
+            thispred = (pred == i)
+            thisacc = torch.sum(thispred & thisset).item()/torch.sum(thisset).item()
+            print('clss %s acc is %f'%(aclass,thisacc))

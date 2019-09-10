@@ -66,7 +66,7 @@ class dataset():
 
         self._update_classes()
 
-    def save(filename):
+    def save(self,filename):
         with open(filename,'wb') as f:
             pickle.dump(self.labels,f)
             pickle.dump(self.xlist,f)
