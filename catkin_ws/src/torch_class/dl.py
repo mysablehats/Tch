@@ -1,27 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#based on https://github.com/jcjohnson/pytorch-examples/blob/master/nn/two_layer_net_nn.py
-# with some changes...
 
 import sys
 
-import torch
+
 try:
     import cPickle as pickle
 except:
     import pickle
-import numpy as np
 
 import time
 
 import traceback
+
+from std_msgs.msg import Float32MultiArray
 
 
 ##we will try it with globals
 #x = None
 #y = None
 
-device = torch.device("cuda:0") # Uncomment this to run on GPU
+QUIET = False
 
 def tic():
     global now
@@ -31,22 +30,92 @@ def toc():
     print('toc. time: %f'%(time.time()-now))
 
 class dataset():
-    def __init__(self,filename):
-        print('loading a suposedly big database. this will take a while (~2 minutes for a 10gb set)')
-        try:
-            tic()
-            pickle_in = open(filename,'rb')
-            self.labels = pickle.load(pickle_in)
-            toc()
-            tic()
-            print(type(self.labels))
-            self.xlist = pickle.load(pickle_in)
-            toc()
-            print(type(self.xlist))
+    def __init__(self):
+        self.labels = []
+        self.xlist = []
+        self.movienum = []
+    def _loadload(self,filename):
+        pickle_in = open(filename,'rb')
+        if self.labels:
+            print('labels not empty. extending set!')
 
-            #print(dir(datasetloader))
-            ###now make them into matrices, erm, tensors, whatever...
-            ### this is maybe already implemented in pytorch, I just don't know the name...
+        ### so I've changed the order in which I save xlist and label list. i suck.
+        ##now I need to check this
+        # tic()
+        # xlist = pickle.load(pickle_in)
+        # print(xlist[0])
+        # toc()
+        #
+        # tic()
+        # labelist = pickle.load(pickle_in)
+        # print(labellist[0])
+        # toc()
+        alist = pickle.load(pickle_in)
+        blist = pickle.load(pickle_in)
+        if type(alist[0]) == type(''):
+            ###then this is a label! so it should be like
+            xlist = blist
+            labelist = alist
+        elif type(blist[0]) == type(''):
+            ###then this is a label! so it should be like
+            xlist = alist
+            labelist = blist
+        else:
+            print('Error: could not make sense of pickle types!')
+
+        if type(xlist[0]) == type([]):
+            print('File seems to have movie chunks! Using fancy parser!')
+            mymultiarray = Float32MultiArray()
+            ii = 0
+            if type(xlist[1][0]) == type(mymultiarray):
+                islistofmultiarray = True
+            else:
+                islistofmultiarray = False
+            for ixlist,ilabel in zip(xlist,labelist):
+                ###I've made a mistake and the first list was empty. I will check for this and only add if the list is not empty:
+                if ixlist:
+                    if islistofmultiarray:
+                        xtolist = [iixlist.data for iixlist in ixlist]
+                    else:
+                        xtolist = ixlist
+                    # if not QUIET:
+                    #     print(xtolist)
+                    self.xlist.extend(xtolist)
+                    ltolist = [ilabel for nope in range(len(ixlist))]
+                    # if not QUIET:
+                    #     print(ltolist)
+                    self.labels.extend(ltolist)
+                    mtolist = [ii for nope in range(len(ixlist))]
+                    # if not QUIET:
+                    #     print(mtolist)
+                    self.movienum.extend(mtolist)
+                    ii = ii + 1
+                else:
+                    print('I ve messed up. this list is empty!')
+                    pass # don't add the label if the ixlist for the label was incorrectly formed
+        else:
+            print('File does not seem to have movie chunks! Using normal parser')
+            self.xlist.extend(xlist)
+            self.labels.extend(labelist )
+        #print(type(self.xlist))
+
+
+
+        #print(type(self.labels))
+
+
+        pickle_in.close()
+
+    def load(self,filenameL):
+        print('loading a suposedly big database. this will take a while (~2 minutes for a 10gb set)')
+        try: ### overloading python style(?)...
+            if type(filenameL) == type([]):
+                for filename in filenameL:
+                    self._loadload(filename)
+
+            elif  type(filenameL) == type(''):
+                filename = filenameL
+                self._loadload(filename)
 
             self._update_classes()
 
@@ -54,17 +123,20 @@ class dataset():
             traceback.print_exc(file=sys.stdout)
 
     def choose_classes(self, choose_list):
-        newlist = []
-        newscores = []
-        for thisLabel,thisScore in zip(self.labels,self.xlist):
-            if thisLabel in choose_list:
-                newlist.append(thisLabel)
-                newscores.append(thisScore)
+        if choose_list:
+            newlist = []
+            newscores = []
+            for thisLabel,thisScore in zip(self.labels,self.xlist):
+                if thisLabel in choose_list:
+                    newlist.append(thisLabel)
+                    newscores.append(thisScore)
 
-        self.labels = newlist
-        self.xlist = newscores
+            self.labels = newlist
+            self.xlist = newscores
 
-        self._update_classes()
+            self._update_classes()
+        else:
+            print('choose list is empty! using previous list with %d elements'%self.numclasses)
 
     def save(self,filename):
         with open(filename,'wb') as f:
@@ -79,37 +151,11 @@ class dataset():
         self.xfeaturessize =  len(self.xlist[0])
         self.classes = classes
         self.numclasses =  len(classes)
-        print("num of classes %d"%self.numclasses)
-        print("classes are:")
-        print(self.classes)
-        print("batch size %d"%self.batchsize)
-        print("feature size %d"%self.xfeaturessize)
+        if not QUIET:
+            print("num of classes %d"%self.numclasses)
+            print("classes are:")
+            print(self.classes)
+            print("batch size %d"%self.batchsize)
+            print("feature size %d"%self.xfeaturessize)
 
-        print('Done!')
-
-    def tocuda(self, numunits=1000):
-        tic()
-        #global x,y
-        mytypexy = torch.tensor((),dtype=torch.float32, device=device)
-        y = mytypexy.new_zeros((self.batchsize,self.numclasses))
-        x = mytypexy.new_zeros((self.batchsize,self.xfeaturessize))
-        for i,(item,thisTSNnnvalues) in enumerate(zip(self.labels,self.xlist)):
-            x[i,:] = torch.from_numpy(np.asarray(thisTSNnnvalues)) ### this is ugly and probably very inefficient
-            for j,classname in enumerate(self.classes):
-                if item == classname:
-                    y[i,j] = 1
-        toc()
-
-        # N is batch size; D_in is input dimension;
-        # H is hidden dimension; D_out is output dimension.
-        #N, D_in, H, D_out = 64, 1000, 100, 10
-        self.N, self.D_in, self.H, self.D_out = self.batchsize, self.xfeaturessize, numunits, self.numclasses
-
-        self.x = x
-        self.y = y
-        print(x.size())
-        print(y.size())
-        del x
-        del y
-        del mytypexy
-        torch.cuda.empty_cache()
+            print('Done!')

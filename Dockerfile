@@ -83,5 +83,6 @@ ENV ROS_MASTER_URI=http://SATELLITE-S50-B:11311
 ADD banner.txt /root/
 
 ADD scripts/entrypoint.sh /root/
+RUN pip install sklearn
 ENTRYPOINT ["/root/entrypoint.sh"]
 ###needs the catkin stuff as well.
