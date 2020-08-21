@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
-# nvidia-docker became docker --gpus all now and probably the NV_GPU flag doesn't work anymore. But maybe someone might want to still use nvidia-docker2 package, so this script needs to become slightly more generic. 
+# nvidia-docker became docker --gpus all now and probably the NV_GPU flag doesn't work anymore. But maybe someone might want to still use nvidia-docker2 package, so this script needs to become slightly more generic.
 
 
 PASSWD=$1
 MYUSERNAME=frederico
 DOCKERHOSTNAME=poop
-THISVOLUMENAME=sshvolume-torch
-DOCKERMACHINEIP=172.28.5.30
-DOCKERMACHINENAME=tch
-MACHINEHOSTNAME=torch_machine2
+THISVOLUMENAME=sshvolume-torch_new
+DOCKERMACHINEIP=172.28.5.31
+DOCKERMACHINENAME=tch_new
+MACHINEHOSTNAME=torch_machine3
 CATKINWSPATH=/root/catkin_ws
 #DOCKERFILE=docker/pytorch/ ## standard should be .
 #BUILDINDIR=$PWD/pytorch ##standard should be $PWD
@@ -26,7 +26,7 @@ else
     #echo "doing nothing"
     OLDDIR=$PWD
     cd $BUILDINDIR
-    nvidia-docker build -t $DOCKERMACHINENAME $DOCKERFILE
+    docker build -t $DOCKERMACHINENAME $DOCKERFILE
     #nvidia-docker build --no-cache -t $DOCKERMACHINENAME .
     cd $OLDDIR
     } ||
