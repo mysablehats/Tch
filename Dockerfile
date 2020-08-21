@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.1-base
+FROM pytorch/pytorch:latest
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -10,35 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
          curl \
          vim \
          ca-certificates \
+         gnupg2 \
          libjpeg-dev \
+         lsb-core \
          libpng-dev &&\
      rm -rf /var/lib/apt/lists/*
-
-
-RUN curl -o ~/mini.sh -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-     chmod +x ~/mini.sh && \
-     ~/mini.sh -b -p /opt/conda && \
-     rm ~/mini.sh
-
-
-RUN  /opt/conda/bin/conda install -y python=$PYTHON_VERSION numpy pyyaml scipy ipython mkl mkl-include cython typing && \
-     /opt/conda/bin/conda install -y -c pytorch magma-cuda101 && \
-     /opt/conda/bin/conda clean -ya
-
-ENV PATH /opt/conda/bin:$PATH
-     #RUN pip install ninja
-     # This must be done before pip so that requirements.txt is available
-WORKDIR /opt
-
-#not the latest. we might need to do some version matching here
-##RUN git clone --recursive https://github.com/mysablehats/pytorch.git
-
-RUN git clone --recursive https://github.com/pytorch/pytorch
-RUN cd pytorch && TORCH_CUDA_ARCH_LIST="3.5 5.2 6.0 6.1 7.0+PTX" TORCH_NVCC_FLAGS="-Xfatbin -compress-all" \
-     CMAKE_PREFIX_PATH="$(dirname $(which conda))/../" \
-     pip install -v .
-
-RUN git clone https://github.com/pytorch/vision.git && cd vision && pip install -v .
 
 WORKDIR /workspace
 RUN chmod -R a+w /workspace
@@ -47,8 +23,6 @@ RUN chmod -R a+w /workspace
 ############# needs sshd and ros with python3 running (copy what I did for fr machine)
 
 #### ROS stuff
-
-RUN apt-get -y update && apt-get install lsb-core --no-install-recommends -y
 
 RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list
 RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
@@ -75,8 +49,7 @@ RUN apt-get install -y --fix-missing \
      # some more ros stuff
 RUN rosdep init && rosdep update
 
-
-     # to get ssh working for the ros machine to be functional: (adapted from docker docs running_ssh_service)
+# to get ssh working for the ros machine to be functional: (adapted from docker docs running_ssh_service)
 RUN mkdir /var/run/sshd \
      && echo 'root:ros_ros' | chpasswd \
      && sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
@@ -92,12 +65,15 @@ RUN echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
 
 ENV ROS_MASTER_URI=http://SATELLITE-S50-B:11311
 
-     #add my snazzy banner
+#add my snazzy banner
 ADD banner.txt /root/
-     ### try to run jupyter so we can do some coding...
-RUN pip install jupyter
-     ##jupyter notebook --port=8888 --no-browser --ip=172.28.5.31 --allow-root
+### try to run jupyter so we can do some coding...
+RUN pip install jupyter && pip install -r /root/requirements_tch.txt && jupyter tensorboard enable --system
+##jupyter notebook --port=8888 --no-browser --ip=172.28.5.31 --allow-root 
 
 ADD scripts/entrypoint.sh /root/
+
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 ENTRYPOINT ["/root/entrypoint.sh"]
      ###needs the catkin stuff as well.
