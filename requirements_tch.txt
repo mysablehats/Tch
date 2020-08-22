@@ -10,4 +10,4 @@ sklearn
 mpld3
 wandb
 tensorboard
-jupyter-tensorboard
+git+https://github.com/huggingface/transformers

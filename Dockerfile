@@ -68,12 +68,15 @@ ENV ROS_MASTER_URI=http://SATELLITE-S50-B:11311
 #add my snazzy banner
 ADD banner.txt /root/
 ### try to run jupyter so we can do some coding...
-RUN pip install jupyter && pip install -r /root/requirements_tch.txt && jupyter tensorboard enable --system
-##jupyter notebook --port=8888 --no-browser --ip=172.28.5.31 --allow-root 
+RUN pip install jupyter && pip install -r /root/requirements_tch.txt
+#&& jupyter tensorboard enable --system
+##jupyter notebook --port=8888 --no-browser --ip=172.28.5.31 --allow-root
 
 ADD scripts/entrypoint.sh /root/
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
+
+RUN git clone https://github.com/huggingface/transformers && python transformers/utils/download_glue_data.py
 ENTRYPOINT ["/root/entrypoint.sh"]
      ###needs the catkin stuff as well.
