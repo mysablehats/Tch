@@ -2,8 +2,10 @@
 
 # nvidia-docker became docker --gpus all now and probably the NV_GPU flag doesn't work anymore. But maybe someone might want to still use nvidia-docker2 package, so this script needs to become slightly more generic.
 
-
-PASSWD=$1
+#Tthis was horrible and it took me long to fix
+#PASSWD=$1
+echo "Password for $USER"
+read -s PASSWD
 MYUSERNAME=frederico
 DOCKERHOSTNAME=poop
 THISVOLUMENAME=sshvolume-torch_new
@@ -49,8 +51,12 @@ else
   else
     echo "found br0 docker network."
   fi
-
-  scripts/enable_forwarding_docker_host.sh
+  /usr/bin/expect <<EOD
+spawn scripts/enable_forwarding_docker_host.sh
+expect "[sudo] password"
+send "$PWD\n"
+interact
+EOD
   #nvidia-docker run --rm -it -p 8888:8888 -h $MACHINEHOSTNAME --network=br0 --ip=$DOCKERMACHINEIP $DOCKERMACHINENAME #bash
   {
   docker volume create --driver vieux/sshfs   -o sshcmd=$MYUSERNAME@$DOCKERHOSTNAME:$PWD/catkin_ws -o password=$PASSWD $THISVOLUMENAME

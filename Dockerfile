@@ -71,12 +71,15 @@ ADD banner.txt /root/
 RUN pip install jupyter && pip install -r /root/requirements_tch.txt
 #&& jupyter tensorboard enable --system
 ##jupyter notebook --port=8888 --no-browser --ip=172.28.5.31 --allow-root
+##todo: make jupyter a daemon https://towshif.github.io/site/tutorials/Python/setup-Jupyter/
 
 ADD scripts/entrypoint.sh /root/
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
-RUN git clone https://github.com/huggingface/transformers && python transformers/utils/download_glue_data.py
+RUN git clone https://github.com/huggingface/transformers 
+RUN python transformers/utils/download_glue_data.py
+RUN ln -s /mnt/share/misc /workspace/misc
 ENTRYPOINT ["/root/entrypoint.sh"]
      ###needs the catkin stuff as well.
