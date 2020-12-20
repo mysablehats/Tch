@@ -1,7 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/bash
 ### maybe i should check if this is enabled somehow and then run it?
+echo "hello"
+read $REPLY
+echo "i heard $REPLY"
 AMIFORWARDING=`sysctl net.ipv4.conf.all.forwarding | grep 1`
-ISIPTABLESSET=`sudo iptables -S | grep -F "-P FORWARD ACCEPT"`
+ISIPTABLESSET=`sudo iptables -S | grep -F "\-P FORWARD ACCEPT"`
 
 if [ -z "${AMIFORWARDING}" ]
 then

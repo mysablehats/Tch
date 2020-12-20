@@ -3,3 +3,9 @@ __pycache__
 .catkin_workspace
 catkin_ws/build/*
 catkin_ws/devel/*
+
+workspace/misc
+workspace/catkin_ws/src/jupyter_classifiers
+
+#
+workspace/catkin_ws/src/CMakeLists.txt

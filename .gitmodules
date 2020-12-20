@@ -1,0 +1,6 @@
+[submodule "workspace/catkin_ws/src/ros_example_torch_classifier"]
+	path = workspace/catkin_ws/src/ros_example_torch_classifier
+	url = https://github.com/frederico-klein/ros_example_torch_classifier.git
+[submodule "workspace/catkin_ws/src/text_classifiers"]
+	path = workspace/catkin_ws/src/text_classifiers
+	url = https://github.com/frederico-klein/text_classifiers.git
